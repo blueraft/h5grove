@@ -56,9 +56,9 @@ def attr_metadata(
     attrId = get_attr_id(entity_attrs, attr_name)
 
     return {
+        "dtype": stringify_dtype(attrId.dtype),
         "name": attr_name,
         "shape": attrId.shape,
-        "type": get_type_metadata(attrId.get_type()),
     }
 
 
