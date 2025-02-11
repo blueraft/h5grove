@@ -36,9 +36,10 @@ from .utils import (
     attr_metadata,
     convert,
     get_array_stats,
+    get_type_metadata,
     open_file_with_error_fallback,
     parse_link_resolution_arg,
-    get_type_metadata,
+    stringify_dtype,
     get_filters,
     get_entity_from_file,
     hdf_path_join,
@@ -50,14 +51,17 @@ from .utils import (
 class EntityContent:
     """Base content for an entity."""
 
-    kind = "other"
+    type = "other"
 
     def __init__(self, path: str):
         self._path = path
 
     def metadata(self) -> EntityMetadata:
-        """Entity metadata"""
-        return {"name": self.name, "kind": self.kind}
+        """Entity metadata
+
+        :returns: {"name": str, "type": str}
+        """
+        return {"name": self.name, "type": self.type}
 
     @property
     def name(self) -> str:
@@ -71,15 +75,18 @@ class EntityContent:
 
 
 class ExternalLinkContent(EntityContent):
-    kind = "external_link"
+    type = "external_link"
 
     def __init__(self, path: str, link: h5py.ExternalLink):
         super().__init__(path)
         self._target_file = link.filename
         self._target_path = link.path
 
-    def metadata(self, depth=None) -> ExternalLinkMetadata:
-        """External link metadata"""
+    def metadata(self, depth=None):
+        """External link metadata
+
+        :returns: {"name": str, "target_file": str, "target_path": str, "type": str}
+        """
         return sorted_dict(
             ("target_file", self._target_file),
             ("target_path", self._target_path),
@@ -98,7 +105,7 @@ class ExternalLinkContent(EntityContent):
 
 
 class SoftLinkContent(EntityContent):
-    kind = "soft_link"
+    type = "soft_link"
 
     def __init__(self, path: str, link: h5py.SoftLink) -> None:
         super().__init__(path)
@@ -137,8 +144,10 @@ class ResolvedEntityContent(EntityContent, Generic[T]):
 
         return dict((key, self._h5py_entity.attrs[key]) for key in attr_keys)
 
-    def metadata(self, depth=None) -> ResolvedEntityMetadata:
-        """Resolved entity metadata"""
+    def metadata(self, depth=None):
+        """
+        :returns: {"attributes": AttributeMetadata, "name": str, "type": str}
+        """
         attribute_names = sorted(self._h5py_entity.attrs.keys())
         return sorted_dict(
             (
@@ -153,15 +162,17 @@ class ResolvedEntityContent(EntityContent, Generic[T]):
 
 
 class DatasetContent(ResolvedEntityContent[h5py.Dataset]):
-    kind = "dataset"
+    type = "dataset"
 
-    def metadata(self, depth=None) -> DatasetMetadata:
-        """Dataset metadata"""
+    def metadata(self, depth=None):
+        """
+        :returns: {"attributes": AttributeMetadata, chunks": tuple, "dtype": str, "filters": tuple, "shape": tuple, "name": str, "type": str}
+        """
         return sorted_dict(
             ("chunks", self._h5py_entity.chunks),
+            ("dtype", stringify_dtype(self._h5py_entity.dtype)),
             ("filters", get_filters(self._h5py_entity)),
             ("shape", self._h5py_entity.shape),
-            ("type", get_type_metadata(self._h5py_entity.id.get_type())),
             *super().metadata().items(),
         )
 
@@ -210,7 +221,7 @@ class DatasetContent(ResolvedEntityContent[h5py.Dataset]):
 
 
 class GroupContent(ResolvedEntityContent[h5py.Group]):
-    kind = "group"
+    type = "group"
 
     def __init__(self, path: str, h5py_entity: h5py.Group, h5file: h5py.File):
         super().__init__(path, h5py_entity)
@@ -286,7 +297,7 @@ def create_content(
     if isinstance(entity, h5py.Datatype):
         return DatatypeContent(path, entity)
 
-    raise TypeError(f"h5py entity {type(entity)} not supported")
+    raise TypeError(f"h5py type {type(entity)} not supported")
 
 
 @contextlib.contextmanager

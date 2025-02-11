@@ -1,7 +1,7 @@
 from __future__ import annotations
 from enum import Enum
-from typing import Union, Tuple, Dict, List
-from typing_extensions import TypedDict, NotRequired
+from typing import Dict, Tuple, TypedDict, Union
+from typing_extensions import NotRequired
 import h5py
 
 H5pyEntity = Union[
@@ -46,7 +46,7 @@ TypeMetadata = TypedDict(
 
 class EntityMetadata(TypedDict):
     name: str
-    kind: str
+    type: TypeMetadata
 
 
 class ExternalLinkMetadata(EntityMetadata):
@@ -65,11 +65,11 @@ class AttributeMetadata(TypedDict):
 
 
 class ResolvedEntityMetadata(EntityMetadata):
-    attributes: List[AttributeMetadata]
+    attributes: list[AttributeMetadata]
 
 
 class GroupMetadata(ResolvedEntityMetadata):
-    children: NotRequired[List[EntityMetadata]]
+    children: NotRequired[list[EntityMetadata]]
 
 
 class DatasetMetadata(ResolvedEntityMetadata):

@@ -192,9 +192,8 @@ class BaseTestEndpoints:
 
         assert content == {
             "attributes": [],
-            "kind": "datatype",
             "name": "committed_type",
-            "type": {"class": 1, "dtype": "<f8", "size": 8, "order": 0},
+            "type": "other",
         }
 
     def test_meta_on_chunked_compressed_dataset(self, server):
@@ -219,10 +218,10 @@ class BaseTestEndpoints:
             "attributes": [],
             "chunks": [5, 5],
             "filters": [{"id": 2, "name": "shuffle"}, {"id": 1, "name": "deflate"}],
-            "kind": "dataset",
             "name": "data",
+            "dtype": "<f8",
             "shape": [10, 10],
-            "type": {"class": 1, "dtype": "<f8", "size": 8, "order": 0},
+            "type": "dataset",
         }
 
     def test_meta_on_compound_dataset(self, server):
@@ -246,32 +245,10 @@ class BaseTestEndpoints:
             "attributes": [],
             "chunks": None,
             "filters": None,
-            "kind": "dataset",
+            "dtype": {"name": "|S10", "age": "<i4", "weight": "<f4"},
             "name": "dogs",
             "shape": [2],
-            "type": {
-                "class": 6,
-                "dtype": {"age": "<i4", "name": "|S10", "weight": "<f4"},
-                "size": 18,
-                "members": {
-                    "age": {
-                        "class": 0,
-                        "dtype": "<i4",
-                        "size": 4,
-                        "order": 0,
-                        "sign": 1,
-                    },
-                    "name": {
-                        "class": 3,
-                        "dtype": "|S10",
-                        "size": 10,
-                        "cset": 0,
-                        "strpad": 1,
-                        "vlen": False,
-                    },
-                    "weight": {"class": 1, "dtype": "<f4", "size": 4, "order": 0},
-                },
-            },
+            "type": "dataset",
         }
 
     def test_meta_on_compound_dataset_with_advanced_types(self, server):
@@ -312,64 +289,17 @@ class BaseTestEndpoints:
         assert content == {
             "attributes": [],
             "chunks": None,
+            "dtype": {
+                "opaque": "|V3",
+                "enum": "|u1",
+                "arr": "|V8",
+                "vlen": "|O",
+                "ref": "|O",
+            },
             "filters": None,
-            "kind": "dataset",
+            "type": "dataset",
             "name": "foo",
             "shape": [1],
-            "type": {
-                "class": 6,
-                "dtype": {
-                    "opaque": "|V3",
-                    "enum": "|u1",
-                    "arr": "|V8",
-                    "vlen": "|O",
-                    "ref": "|O",
-                },
-                "size": 36,
-                "members": {
-                    "opaque": {"class": 5, "dtype": "|V3", "size": 3, "tag": ""},
-                    "enum": {
-                        "class": 8,
-                        "dtype": "|u1",
-                        "size": 1,
-                        "members": {"H2G2": 42},
-                        "base": {
-                            "class": 0,
-                            "dtype": "|u1",
-                            "size": 1,
-                            "order": 0,
-                            "sign": 0,
-                        },
-                    },
-                    "arr": {
-                        "class": 10,
-                        "dtype": "|V8",
-                        "size": 8,
-                        "dims": [1],
-                        "base": {
-                            "class": 3,
-                            "dtype": "|O",
-                            "size": 8,
-                            "cset": 1,
-                            "strpad": 0,
-                            "vlen": True,
-                        },
-                    },
-                    "vlen": {
-                        "class": 9,
-                        "dtype": "|O",
-                        "size": 16,
-                        "base": {
-                            "class": 0,
-                            "dtype": "<u8",
-                            "order": 0,
-                            "sign": 0,
-                            "size": 8,
-                        },
-                    },
-                    "ref": {"class": 7, "dtype": "|O", "size": 8},
-                },
-            },
         }
 
     def test_meta_on_group(self, server):
@@ -416,20 +346,20 @@ class BaseTestEndpoints:
         # Valid link is not resolved only if link resolution is 'none'.
         if resolve_links == LinkResolution.NONE:
             assert content == {
-                "kind": "external_link",
                 "name": "ext_link",
                 "target_file": "source.h5",
                 "target_path": "data",
+                "type": "external_link",
             }
         else:
             assert content == {
                 "attributes": [],
                 "chunks": None,
                 "filters": None,
-                "kind": "dataset",
+                "dtype": "<f8",
                 "name": "ext_link",
                 "shape": [10],
-                "type": {"class": 1, "dtype": "<f8", "order": 0, "size": 8},
+                "type": "dataset",
             }
 
     def test_stats_on_negative_scalar(self, server):
@@ -570,7 +500,7 @@ class BaseTestEndpoints:
             response = server.get(url)
             content = decode_response(response)
             assert content == {
-                "kind": "soft_link",
+                "type": "soft_link",
                 "name": "link",
                 "target_path": "not_an_entity",
             }

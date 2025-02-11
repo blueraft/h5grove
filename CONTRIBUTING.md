@@ -71,6 +71,7 @@ Release notes can then be written in the [Releases page](https://github.com/silx
 ### Pre-releases
 
 The following commands can be used to handle the pre-release cycle:
+
 - To tag the first pre-release, run `bump2version --new-version <X.Y.Zb0> [patch|minor|major]` where `X.Y.Z` is the version number of the next release
 - To bump the pre-release number, run `bump2version pre`
 - To bump to the release, run `bump2version prerelease`
